@@ -12,7 +12,6 @@ class Server:
 
     def __init__(self, port=8000):
         self._port = port
-        self._stop = False
         self._httpd = None
         self._server_started = False
         self._server_started_condition = None
@@ -22,15 +21,14 @@ class Server:
         Handler = http.server.SimpleHTTPRequestHandler
 
         self._httpd = socketserver.TCPServer(("", self._port), Handler)
-        with self._httpd as httpd:
-            print("serving at port", self._port)
-            with self._server_started_condition:
-                self._server_started = True
-                # Notify starting thread of successful start
-                self._server_started_condition.notify_all()
-            while not self._stop:
-                httpd.handle_request()
-            print("Server stopped")
+        print("serving at port", self._port)
+        with self._server_started_condition:
+            self._server_started = True
+            # Notify starting thread of successful start
+            self._server_started_condition.notify_all()
+        self._httpd.serve_forever()
+        # Here, server was stopped
+        print("Server stopped")
 
     def stop_server(self):
         """
@@ -38,8 +36,7 @@ class Server:
         :return:
         """
         print("Stopping server")
-        self._stop = True
-        self._httpd.socket.close()
+        self._httpd.shutdown()
 
     def start_server(self, timeout=10):
         """
@@ -47,7 +44,6 @@ class Server:
         As such the program will automatically close the thread on exit of all non-daemon threads
         :return:
         """
-        self._stop = False
         self._httpd = None
         self._server_started = False
         self._server_started_condition = threading.Condition()

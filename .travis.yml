@@ -13,13 +13,10 @@ matrix:
   fast_finish: true
 
 install:
-  - pip install tox
   - pip install coverage
   - pip install coveralls
-  - pip install .
 
 script:
-# - tox
   - coverage run test.py
 
 after_success:

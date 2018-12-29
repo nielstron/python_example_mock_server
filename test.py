@@ -21,8 +21,13 @@ class SetupTest(unittest.TestCase):
 
     def test_request(self):
         # Simple example server test
-        r = requests.get('http://{}:{}/index.html'.format(ADDRESS, PORT))
+        r = requests.get('http://{}:{}/index.html'.format(ADDRESS, PORT), timeout=10)
         self.assertEqual(r.status_code, 200)
+
+    def tearDown(self):
+        # possible but not necessary
+        # self.server.stop_server()
+        pass
 
 
 if __name__ == "__main__":

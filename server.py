@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import threading
-import time
 
+import signal
 import http.server
 import socketserver
 
@@ -13,8 +13,10 @@ class Server:
     def __init__(self, port=8000):
         self._port = port
         self._httpd = None
-        self._server_started = False
-        self._server_started_condition = None
+        self._server_started_event = None
+        # make totally, really, absolutely sure we close our socket on interrupt (as python doesn't)
+        signal.signal(signal.SIGTERM, self._cleanup_server)
+        signal.signal(signal.SIGINT, self._cleanup_server)
 
     def _run_server(self):
 
@@ -22,11 +24,17 @@ class Server:
 
         self._httpd = socketserver.TCPServer(("", self._port), Handler)
         print("serving at port", self._port)
-        with self._server_started_condition:
-            self._server_started = True
-            # Notify starting thread of successful start
-            self._server_started_condition.notify_all()
-        self._httpd.serve_forever()
+
+        # notify about start
+        self._server_started_event.set()
+
+        try:
+            self._httpd.serve_forever()
+        finally:
+            self._cleanup_server()
+
+    def _cleanup_server(self):
+        self._httpd.server_close()
         # Here, server was stopped
         print("Server stopped")
 
@@ -45,13 +53,10 @@ class Server:
         :return:
         """
         self._httpd = None
-        self._server_started = False
-        self._server_started_condition = threading.Condition()
+        self._server_started_event = threading.Event()
         # start webserver as daemon => will automatically be closed when non-daemon threads are closed
         t = threading.Thread(target=self._run_server, daemon=True)
-        t.start()
         # Start webserver
-        with self._server_started_condition:
-            while not self._server_started:
-                # wait (non-busy) for successful start
-                self._server_started_condition.wait(timeout=timeout)
+        t.start()
+        # wait (non-busy) for successful start
+        self._server_started_event.wait(timeout=timeout)

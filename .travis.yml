@@ -20,11 +20,7 @@ install:
 
 script:
 # - tox
-  - coverage run --source=quantulum3 scripts/test_import_error.py
-  - coverage run -a --source=quantulum3 setup.py test -s quantulum3.tests.test_setup
-  - coverage run -a --source=quantulum3 setup.py test -s quantulum3.tests.test_no_classifier
-  - pip install -r requirements_classifier.txt
-  - coverage run -a --source=quantulum3 setup.py test -s quantulum3.tests.test_classifier
+  - coverage run test.py
 
 after_success:
   - coverage report

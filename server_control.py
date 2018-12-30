@@ -17,14 +17,16 @@ class Server:
 
     def _run_server(self):
 
-        print("Server started")
+        print("Server started, serving on port {}".format(self.get_port()))
 
         # notify about start
         self._server_started_event.set()
         self._server_running = True
 
-        self._server.serve_forever()
-        self._cleanup_server()
+        try:
+            self._server.serve_forever()
+        finally:
+            self._cleanup_server()
 
     def _cleanup_server(self):
         self._server_running = False
@@ -49,8 +51,11 @@ class Server:
         """
         self._server_started_event.clear()
         # start webserver as daemon => will automatically be closed when non-daemon threads are closed
-        t = threading.Thread(target=self._run_server)
+        t = threading.Thread(target=self._run_server, daemon=True)
         # Start webserver
         t.start()
         # wait (non-busy) for successful start
         self._server_started_event.wait(timeout=timeout)
+
+    def get_port(self):
+        return self._server.server_address[1]

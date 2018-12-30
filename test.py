@@ -8,31 +8,44 @@ import server_control
 # For the server in this case
 import http.server
 import socketserver
+import time
 
 # For the tests
 import requests
 
 
 ADDRESS = 'localhost'
-PORT = 8000
 
 
 class SetupTest(unittest.TestCase):
 
-    server = None
+    server_control = None
+    port = 0
 
     def setUp(self):
         # Create an arbitrary subclass of TCP Server as the server to be started
         # Here, it is an Simple HTTP file serving server
         Handler = http.server.SimpleHTTPRequestHandler
 
-        self.server_control = server_control.Server(socketserver.TCPServer((ADDRESS, PORT), Handler))
+        max_retries = 10
+        r = 0
+        while not self.server_control:
+            try:
+                # Connect to any open port
+                self.server_control = server_control.Server(socketserver.TCPServer((ADDRESS, 0), Handler))
+            except OSError:
+                if r < max_retries:
+                    r += 1
+                else:
+                    raise
+                time.sleep(1)
+        self.port = self.server_control.get_port()
         # Start test server before running any tests
         self.server_control.start_server()
 
     def test_request(self):
         # Simple example server test
-        r = requests.get('http://{}:{}/index.html'.format(ADDRESS, PORT), timeout=10)
+        r = requests.get('http://{}:{}/index.html'.format(ADDRESS, self.port), timeout=10)
         self.assertEqual(r.status_code, 200)
 
     def tearDown(self):

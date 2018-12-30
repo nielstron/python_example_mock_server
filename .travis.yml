@@ -18,6 +18,8 @@ install:
 
 script:
   - coverage run test.py
+  # Run a second time to make sure the socket was closed correctly last time
+  - coverage run test.py
 
 after_success:
   - coverage report

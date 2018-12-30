@@ -36,8 +36,7 @@ class SetupTest(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
 
     def tearDown(self):
-        # possible but not necessary
-        # self.server_control.stop_server()
+        self.server_control.stop_server()
         pass
 
 

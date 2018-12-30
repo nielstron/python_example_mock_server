@@ -13,9 +13,7 @@ class Server:
         """
         self._server = server
         self._server_started_event = threading.Event()
-        # make totally, really, absolutely sure we close our socket on interrupt (as python doesn't)
-        signal.signal(signal.SIGTERM, self._cleanup_server)
-        signal.signal(signal.SIGINT, self._cleanup_server)
+        self._server_running = False
 
     def _run_server(self):
 
@@ -23,13 +21,13 @@ class Server:
 
         # notify about start
         self._server_started_event.set()
+        self._server_running = True
 
-        try:
-            self._server.serve_forever()
-        finally:
-            self._cleanup_server()
+        self._server.serve_forever()
+        self._cleanup_server()
 
     def _cleanup_server(self):
+        self._server_running = False
         self._server.server_close()
         # Here, server was stopped
         print("Server stopped")
@@ -40,7 +38,8 @@ class Server:
         :return:
         """
         print("Stopping server")
-        self._server.shutdown()
+        if self._server_running:
+            self._server.shutdown()
 
     def start_server(self, timeout=10):
         """
@@ -50,7 +49,7 @@ class Server:
         """
         self._server_started_event.clear()
         # start webserver as daemon => will automatically be closed when non-daemon threads are closed
-        t = threading.Thread(target=self._run_server, daemon=True)
+        t = threading.Thread(target=self._run_server)
         # Start webserver
         t.start()
         # wait (non-busy) for successful start

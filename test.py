@@ -26,7 +26,7 @@ class SetupTest(unittest.TestCase):
         # Here, it is an Simple HTTP file serving server
         Handler = http.server.SimpleHTTPRequestHandler
 
-        self.server_control = server_control.Server(socketserver.TCPServer(("", PORT), Handler))
+        self.server_control = server_control.Server(socketserver.TCPServer((ADDRESS, PORT), Handler))
         # Start test server before running any tests
         self.server_control.start_server()
 

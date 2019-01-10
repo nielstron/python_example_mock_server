@@ -13,7 +13,6 @@ import time
 # For the tests
 import requests
 
-
 ADDRESS = 'localhost'
 
 
@@ -32,7 +31,8 @@ class SetupTest(unittest.TestCase):
         while not self.server_control:
             try:
                 # Connect to any open port
-                self.server_control = server_control.Server(socketserver.TCPServer((ADDRESS, 0), Handler))
+                self.server_control = server_control.Server(
+                    socketserver.TCPServer((ADDRESS, 0), Handler))
             except OSError:
                 if r < max_retries:
                     r += 1
@@ -45,7 +45,8 @@ class SetupTest(unittest.TestCase):
 
     def test_request(self):
         # Simple example server test
-        r = requests.get('http://{}:{}/index.html'.format(ADDRESS, self.port), timeout=10)
+        r = requests.get(
+            'http://{}:{}/index.html'.format(ADDRESS, self.port), timeout=10)
         self.assertEqual(r.status_code, 200)
 
     def tearDown(self):
